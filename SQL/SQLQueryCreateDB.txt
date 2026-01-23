@@ -1,0 +1,127 @@
+-- Создание базы данных
+CREATE DATABASE DiplomaFoodProductionDB;
+GO
+
+USE DiplomaFoodProductionDB;
+GO
+
+-- 1. Таблица Сотрудники (Employees)
+CREATE TABLE Employees (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    FullName NVARCHAR(255) NOT NULL,
+    Position NVARCHAR(100) NOT NULL,
+    Phone NVARCHAR(50),
+    Email NVARCHAR(255),
+    HireDate DATE
+);
+GO
+
+-- 2. Таблица Клиенты (Clients)
+CREATE TABLE Clients (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    FullName NVARCHAR(255) NOT NULL,
+    ContactPerson NVARCHAR(255),
+    Phone NVARCHAR(50),
+    Email NVARCHAR(255)
+);
+GO
+ALTER TABLE Clients
+ADD CONSTRAINT UK_Clients_Email UNIQUE (Email);
+
+-- 3. Таблица Поставщики (Suppliers)
+CREATE TABLE Suppliers (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    CompanyName NVARCHAR(255) NOT NULL,
+    ContactPerson NVARCHAR(255),
+    Phone NVARCHAR(50),
+    Email NVARCHAR(255),
+    Address NVARCHAR(500)
+);
+GO
+
+-- 4. Таблица Продукты (Products)
+CREATE TABLE Products (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(255) NOT NULL,
+    Category NVARCHAR(100) NOT NULL,
+    UnitOfMeasure NVARCHAR(50) NOT NULL,
+    ShelfLifeDays INT NOT NULL CHECK (ShelfLifeDays >= 0),
+    PricePerUnit DECIMAL(10,2) NOT NULL CHECK (PricePerUnit >= 0)
+);
+GO
+
+-- 5. Таблица Сырьё (RawMaterials)
+CREATE TABLE RawMaterials (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(255) NOT NULL,
+    UnitOfMeasure NVARCHAR(50) NOT NULL,
+    MinStockLevel DECIMAL(10,3) NOT NULL CHECK (MinStockLevel >= 0),
+    QuantityInStock DECIMAL(10,3) NOT NULL CHECK (QuantityInStock >= 0)
+);
+GO
+
+-- 6. Таблица Заказы (SalesOrders)
+CREATE TABLE SalesOrders (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    ClientID INT NULL, -- При удалении клиента -> NULL
+    ManagerID INT NULL, -- При удалении сотрудника -> NULL (реализуется программно)
+    CookID INT NULL, -- При удалении сотрудника -> NULL (реализуется программно)
+    OrderDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CompletionDate DATETIME2 NULL,
+    TotalAmount DECIMAL(12,2) NOT NULL CHECK (TotalAmount >= 0),
+    Status NVARCHAR(50) NOT NULL DEFAULT 'Создан',
+    CONSTRAINT FK_SalesOrders_Clients FOREIGN KEY (ClientID) REFERENCES Clients(ID) ON DELETE SET NULL,
+    CONSTRAINT FK_SalesOrders_Manager FOREIGN KEY (ManagerID) REFERENCES Employees(ID) ON DELETE NO ACTION,
+    CONSTRAINT FK_SalesOrders_Cook FOREIGN KEY (CookID) REFERENCES Employees(ID) ON DELETE NO ACTION
+);
+GO
+
+-- 7. Таблица Позиции заказа (OrderItems)
+CREATE TABLE OrderItems (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity DECIMAL(12,3) NOT NULL CHECK (Quantity > 0),
+    Subtotal DECIMAL(15,2) NOT NULL, -- Поле заполняется программно
+    CONSTRAINT FK_OrderItems_SalesOrders FOREIGN KEY (OrderID) REFERENCES SalesOrders(ID) ON DELETE CASCADE, -- При удалении заказа -> удаляются позиции
+    CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductID) REFERENCES Products(ID) ON DELETE NO ACTION -- Удаление продукта запрещено, если он используется
+);
+GO
+
+-- 8. Таблица Рецептуры (Recipes)
+CREATE TABLE Recipes (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductID INT NOT NULL,
+    RawMaterialID INT NOT NULL,
+    Quantity DECIMAL(10,3) NOT NULL CHECK (Quantity > 0),
+    CONSTRAINT FK_Recipes_Products FOREIGN KEY (ProductID) REFERENCES Products(ID) ON DELETE CASCADE, -- При удалении продукта -> удаляются рецептуры
+    CONSTRAINT FK_Recipes_RawMaterials FOREIGN KEY (RawMaterialID) REFERENCES RawMaterials(ID)
+);
+GO
+
+-- 9. Таблица Поставки (Supplies)
+CREATE TABLE Supplies (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    SupplierID INT NULL, -- При удалении поставщика -> NULL
+    RawMaterialID INT NOT NULL,
+    EmployeeID INT NULL, -- При удалении сотрудника -> NULL
+    Quantity DECIMAL(12,3) NOT NULL CHECK (Quantity > 0),
+    SupplyDate DATETIME2 NOT NULL DEFAULT GETDATE(), 
+    CONSTRAINT FK_Supplies_Suppliers FOREIGN KEY (SupplierID) REFERENCES Suppliers(ID) ON DELETE SET NULL,
+    CONSTRAINT FK_Supplies_RawMaterials FOREIGN KEY (RawMaterialID) REFERENCES RawMaterials(ID),
+    CONSTRAINT FK_Supplies_Employees FOREIGN KEY (EmployeeID) REFERENCES Employees(ID) ON DELETE SET NULL
+);
+GO
+
+-- 10. Таблица Авторизация (Auth)
+CREATE TABLE Auth (
+    EmployeeID INT PRIMARY KEY, -- Это одновременно PK и FK
+    Login NVARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    AccessLevel INT NOT NULL CHECK (AccessLevel IN (-1, 0, 1, 2)), 
+    CONSTRAINT FK_Auth_Employees FOREIGN KEY (EmployeeID) REFERENCES Employees(ID) ON DELETE CASCADE -- При удалении сотрудника -> удаляется авторизация
+);
+GO
+
+-- Готово!
+PRINT 'База данных DiplomaFoodProductionDB создана успешно.';

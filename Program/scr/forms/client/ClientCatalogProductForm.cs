@@ -3,10 +3,13 @@
     public partial class ClientCatalogProductForm : Form
     {
         private Dictionary<int, NumericUpDown> productQuantities;
+        private bool isManager = false;
 
-        public ClientCatalogProductForm()
+
+        public ClientCatalogProductForm(bool isManager = false)
         {
             InitializeComponent();
+            this.isManager = isManager;
         }
 
         private void ClientCatalogProductForm_Load(object sender, EventArgs e)
@@ -109,7 +112,7 @@
             }
 
 
-            new ClientDoOrderForm(orderDict).ShowDialog();
+            new ClientDoOrderForm(orderDict, isManager).ShowDialog();
             if (ClientDoOrderForm.isClose) Close();
         }
     }

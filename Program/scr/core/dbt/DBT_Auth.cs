@@ -76,6 +76,35 @@ namespace Program.scr.core.dbt
             return obj;
         }
 
+        public static DBT_Auth GetByLogin(string id)
+        {
+            var obj = new DBT_Auth();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(SQL._sqlConnectStr))
+                {
+                    connection.Open();
+                    using (var query = connection.CreateCommand())
+                    {
+                        query.CommandText = "SELECT * FROM Auth WHERE Login = @id";
+                        query.Parameters.AddWithValue("@id", id);
+                        using (var reader = query.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                obj.EmployeeID = reader.GetInt32(0);
+                                obj.Login = reader.GetString(1);
+                                obj.PasswordHash = reader.GetString(2);
+                                obj.AccessLevel = reader.GetInt32(3);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { obj = null; }
+            return obj;
+        }
+
         public static int Create(DBT_Auth obj)
         {
             try
@@ -85,7 +114,8 @@ namespace Program.scr.core.dbt
                     connection.Open();
                     using (var query = connection.CreateCommand())
                     {
-                        query.CommandText = "INSERT INTO Auth VALUES (@Login, @PasswordHash, @AccessLevel);";
+                        query.CommandText = "INSERT INTO Auth VALUES (@EmployeeID, @Login, @PasswordHash, @AccessLevel);";
+                        query.Parameters.AddWithValue("@EmployeeID", obj.EmployeeID);
                         query.Parameters.AddWithValue("@Login", obj.Login);
                         query.Parameters.AddWithValue("@PasswordHash", obj.PasswordHash);
                         query.Parameters.AddWithValue("@AccessLevel", obj.AccessLevel);

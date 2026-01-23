@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using Program.scr.core;
+﻿using Program.scr.core;
 using Program.scr.core.dbt;
 
 namespace Program.scr.forms.client
@@ -11,11 +10,12 @@ namespace Program.scr.forms.client
         private Dictionary<int, NumericUpDown> productQuantities;
         private int? clientId = null; // ID найденного клиента или null, если новый
         public static bool isClose = false;
+        private bool isManager = false;
 
-
-        public ClientDoOrderForm(Dictionary<int, int> order)
+        public ClientDoOrderForm(Dictionary<int, int> order, bool isManager = false)
         {
             isClose = false;
+            this.isManager = isManager;
 
             orderDict = order ?? throw new ArgumentNullException(nameof(order));
 
@@ -148,7 +148,7 @@ namespace Program.scr.forms.client
                 }
             }
 
-            Core.SaveOrder((int)clientId, orderDict);
+            Core.SaveOrder((int)clientId, orderDict, isManager);
 
             MessageBox.Show("Заказ успешно оформлен!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
             isClose = true;

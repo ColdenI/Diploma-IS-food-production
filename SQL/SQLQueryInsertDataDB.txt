@@ -161,5 +161,8 @@ INSERT INTO Auth (EmployeeID, Login, PasswordHash, AccessLevel) VALUES
 (10, 'lebedevatatyana', 'lebedevatatyana', 2); -- повар
 GO
 
+UPDATE SalesOrders SET Status = 'Завершено' WHERE Status = 'Выполнен'
+GO
+
 -- Готово!
 PRINT 'Данные успешно добавлены в базу DiplomaFoodProductionDB.';

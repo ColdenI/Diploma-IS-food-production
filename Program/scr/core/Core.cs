@@ -1,15 +1,15 @@
 ﻿using Microsoft.Data.SqlClient;
-using Program.scr.core.dbt;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Data;
 
 namespace Program.scr.core
 {
     public static class Core
     {
+        public static int ThisUser_ID = -1;
+        public static int ThisUser_AC = -1;
+
+        public static string[] ACs = { "Нет доступа", "Админ", "Менеджер", "Повар" };
+
         public static Dictionary<int, decimal> Get_RawMaterialsIdAndQuantity_ByProductId(int productId)
         {
             var objs = new Dictionary<int, decimal>();
@@ -37,7 +37,7 @@ namespace Program.scr.core
             return objs;
         }
 
-        public static int SaveOrder(int clientId, Dictionary<int, int> orderDict)
+        public static int SaveOrder(int clientId, Dictionary<int, int> orderDict, bool isManager = false)
         {
             try
             {
@@ -49,7 +49,10 @@ namespace Program.scr.core
                         try
                         {
                             int orderId = -1;
-                            int? managerId = GetLeastBusyManager(connection, transaction);
+                            int? managerId = null;
+
+                            if (isManager) managerId = Core.ThisUser_ID;
+                            else managerId = GetLeastBusyManager(connection, transaction);
 
                             if (managerId == null)
                             {
@@ -166,6 +169,61 @@ namespace Program.scr.core
                 }
             }
             return null; // Нет доступных менеджеров
+        }
+
+        public static class Auth
+        {
+            public static AuthResult? ValidateCredentials(string login, string password)
+            {
+                try
+                {
+                    using (SqlConnection connection = new SqlConnection(scr.core.SQL._sqlConnectStr))
+                    {
+                        connection.Open();
+                        using (var cmd = new SqlCommand(@"
+                SELECT a.EmployeeID, a.AccessLevel, e.HireDate
+                FROM Auth a
+                INNER JOIN Employees e ON a.EmployeeID = e.ID
+                WHERE a.Login = @Login AND a.PasswordHash = @Password", connection))
+                        {
+                            cmd.Parameters.AddWithValue("@Login", login);
+                            cmd.Parameters.AddWithValue("@Password", password);
+
+                            using (var reader = cmd.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    int employeeId = reader.GetInt32("EmployeeID");
+                                    int accessLevel = reader.GetInt32("AccessLevel");
+                                    DateTime hireDate = reader.GetDateTime("HireDate");
+
+                                    return new AuthResult(employeeId, accessLevel, hireDate);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // В реальной системе логгируйте ошибку
+                }
+                return null;
+            }
+
+            // Вспомогательная структура
+            public struct AuthResult
+            {
+                public int EmployeeID;
+                public int AccessLevel;
+                public DateTime HireDate;
+
+                public AuthResult(int employeeId, int accessLevel, DateTime hireDate)
+                {
+                    EmployeeID = employeeId;
+                    AccessLevel = accessLevel;
+                    HireDate = hireDate;
+                }
+            }
         }
     }
 }

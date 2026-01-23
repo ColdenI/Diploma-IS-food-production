@@ -313,7 +313,7 @@ namespace Program.scr.forms
                 conn.Open();
                 using (var cmd = new SqlCommand(@"
                     SELECT COUNT(*) AS Total,
-                           SUM(CASE WHEN Status = 'Завершён' THEN 1 ELSE 0 END) AS Completed,
+                           SUM(CASE WHEN Status = 'Завершено' THEN 1 ELSE 0 END) AS Completed,
                            AVG(CAST(DATEDIFF(SECOND, OrderDate, CompletionDate) AS FLOAT)) AS AvgSecs
                     FROM SalesOrders
                     WHERE OrderDate BETWEEN @Start AND @End

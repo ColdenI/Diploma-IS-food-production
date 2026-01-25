@@ -113,7 +113,7 @@ namespace Program.scr.forms.userControls
                             dataGridView.Rows[index].Cells[1].Value = DBT_Employees.GetById(reader.GetInt32(0)).FullName;
                             dataGridView.Rows[index].Cells[2].Value = reader.GetString(1);
                             dataGridView.Rows[index].Cells[3].Value = reader.GetString(2);
-                            dataGridView.Rows[index].Cells[4].Value = reader.GetInt32(3);
+                            dataGridView.Rows[index].Cells[4].Value = Core.ACs[reader.GetInt32(3) + 1];
 
                             string search = textBox_search.Text.ToLower();
                             if (!string.IsNullOrWhiteSpace(search))

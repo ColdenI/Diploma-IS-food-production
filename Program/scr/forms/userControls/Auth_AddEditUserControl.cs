@@ -35,7 +35,7 @@ namespace Program.scr.forms.userControls
 
             textBox_Login.Text = obj.Login.ToString();
             textBox_PasswordHash.Text = obj.PasswordHash.ToString();
-            comboBox_AccessLevel.Text = obj.AccessLevel.ToString();
+            comboBox_AccessLevel.SelectedIndex = obj.AccessLevel + 1;
         }
 
         private void Init()

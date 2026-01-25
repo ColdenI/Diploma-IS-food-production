@@ -62,7 +62,7 @@ namespace Program.scr.forms.userControls
             button_edit.Click += Button_edit_Click;
             textBox_search.TextChanged += TextBox_search_TextChanged;
 
-            this.Controls.Add(button_create);
+            if (Core.ThisUser_AC != 2) this.Controls.Add(button_create);
             this.Controls.Add(button_edit);
             //this.Controls.Add(button_remove);
             this.Controls.Add(button_update);

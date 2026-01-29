@@ -20,13 +20,13 @@ namespace Program.scr.forms.client
             orderDict = order ?? throw new ArgumentNullException(nameof(order));
 
             InitializeComponent();
-     
+
             btnCheck.Click += BtnCheck_Click;
             btnOrder.Click += BtnOrder_Click;
 
             dgvOrderItems.AllowUserToAddRows = false;
             dgvOrderItems.ReadOnly = true;
-    
+
 
             // Subscribe to text change events to enable/disable order button
             txtFullName.TextChanged += OnInputChanged;
@@ -148,12 +148,12 @@ namespace Program.scr.forms.client
                 }
             }
 
-            Core.SaveOrder((int)clientId, orderDict, isManager);
+            int orderId = Core.SaveOrder((int)clientId, orderDict, isManager);
 
-            MessageBox.Show("Заказ успешно оформлен!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"Заказ успешно оформлен!\nНомер заказа: {orderId}", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
             isClose = true;
             Close();
         }
-        
+
     }
 }
